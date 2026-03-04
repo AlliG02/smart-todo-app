@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 // state + logic lives inside component
 function App() {
   // hooks must be inside the component
   const [taskText, setTaskText] = useState("");
-  const [tasks, setTasks] = useState([]);
+  // load from storage on start 
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem("tasks");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [filter, setFilter] = useState("all"); // "all" | "active" | "completed"
 
   // functions should only be logic not ui 
@@ -38,7 +42,14 @@ function App() {
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
+
   };
+
+  // save tasks to local storage
+  // needs to go after state and functions
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   // compute visible tasks for rendering
   // derived state based on filter
