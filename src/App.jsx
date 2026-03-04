@@ -6,6 +6,7 @@ function App() {
   // hooks must be inside the component
   const [taskText, setTaskText] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [filter, setFilter] = useState("all"); // "all" | "active" | "completed"
 
   // functions should only be logic not ui 
   const addTask = () => {
@@ -17,82 +18,99 @@ function App() {
       completed: false,
     };
 
+    // update tasks immutably
     setTasks([...tasks, newTask]);
     setTaskText("");
   };
 
   // delete task
   const deleteTask = (id) => {
-    const filteredTasks = tasks.filter((task) => task.id !== id);
-    setTasks(filteredTasks);
+    // filter out the task to delete
+    setTasks(tasks.filter((task) => task.id !== id));
   };
 
-  // toggle function 
+  // toggle task completion
   // React LOVES immutable updates 
-  // we dont change the value, we modify it
+  // we dont change the value directly, we create a new object
   const toggleTask = (id) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === id
-        ? { ...task, completed: !task.completed }
-        : task
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
     );
-  
-    setTasks(updatedTasks);
   };
+
+  // compute visible tasks for rendering
+  // derived state based on filter
+  const visibleTasks = tasks.filter((task) => {
+    if (filter === "all") return true;
+    if (filter === "active") return !task.completed;
+    if (filter === "completed") return task.completed;
+  });
 
   // ui lives inside return 
   return (
     <div style={{ maxWidth: 600, margin: "40px auto", fontFamily: "sans-serif" }}>
       <h1>Smart To-Do</h1>
 
+      {/* controlled input */}
       <input
         value={taskText}
         onChange={(e) => setTaskText(e.target.value)}
         placeholder="Add a task..."
       />
-
       <button onClick={addTask}>Add</button>
 
+      {/* filter buttons */}
+      <div style={{ margin: "16px 0" }}>
+        <button onClick={() => setFilter("all")} style={{ marginRight: 8 }}>All</button>
+        <button onClick={() => setFilter("active")} style={{ marginRight: 8 }}>Active</button>
+        <button onClick={() => setFilter("completed")}>Completed</button>
+      </div>
+
+      {/* render visibleTasks instead of tasks */}
       <ul>
-        {tasks.map((task) => (
+        {visibleTasks.map((task) => (
           <li
-          key={task.id}
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "8px",
-            padding: "4px 8px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
-        >
-          <span
-            onClick={() => toggleTask(task.id)}
+            key={task.id}
             style={{
-              cursor: "pointer",
-              textDecoration: task.completed ? "line-through" : "none",
-              opacity: task.completed ? 0.5 : 1,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+              padding: "4px 8px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
             }}
           >
-            {task.text}
-          </span>
-        
-          <button
-            onClick={() => deleteTask(task.id)}
-            style={{
-              marginLeft: "8px",
-              padding: "2px 6px",
-              cursor: "pointer",
-              backgroundColor: "red",
-              color: "white",
-              border: "none",
-              borderRadius: "3px",
-            }}
-          >
-            Delete
-          </button>
-        </li>
+            {/* click to toggle complete */}
+            <span
+              onClick={() => toggleTask(task.id)}
+              style={{
+                cursor: "pointer",
+                textDecoration: task.completed ? "line-through" : "none",
+                opacity: task.completed ? 0.5 : 1,
+              }}
+            >
+              {task.text}
+            </span>
+
+            {/* delete button */}
+            <button
+              onClick={() => deleteTask(task.id)}
+              style={{
+                marginLeft: "8px",
+                padding: "2px 6px",
+                cursor: "pointer",
+                backgroundColor: "red",
+                color: "white",
+                border: "none",
+                borderRadius: "3px",
+              }}
+            >
+              Delete
+            </button>
+          </li>
         ))}
       </ul>
     </div>
